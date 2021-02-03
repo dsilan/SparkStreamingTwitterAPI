@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="twitter4j-core-4.0.4">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../SparkStreamingFiles/twitter4j-core-4.0.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../SparkStreamingFiles/twitter4j-stream-4.0.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
