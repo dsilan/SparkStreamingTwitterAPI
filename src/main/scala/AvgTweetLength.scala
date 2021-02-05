@@ -1,8 +1,5 @@
-import org.apache.spark._
-import org.apache.spark.SparkContext._
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.twitter._
-import java.util.concurrent
 import java.util.concurrent.atomic._
 import Utilities._
 
@@ -16,13 +13,17 @@ object AvgTweetLength {
     val tweets = TwitterUtils.createStream(ssc, None)
     val statuses = tweets.map(status => status.getText())
     val lengths = statuses.map(status => status.length())
-    //Atomic vars let you access long vars in a safe thread
+
+    // As we could have multiple processes adding into these running totals
+    // at the same time, we'll just Java's AtomicLong class to make sure
+    // these counters are thread-safe.
+
     var totalTweets = new AtomicLong(0)
     var totalChars = new AtomicLong(0)
 
     lengths.foreachRDD((rdd, time) => {
       var count = rdd.count()
-      if(count > 0) { //dont bother wth empty batches
+      if(count > 0) { //don't bother wth empty batches
         totalTweets.getAndAdd(count)
         totalChars.getAndAdd(rdd.reduce(_+_))
 
