@@ -25,6 +25,47 @@ object LogAlarmer {
         matcher.group(6)
       else "{error}"
     })
-    //map statuses with results to seccess and failure
+    //map statuses with results to success and failure
+    val successFailure = statuses.map(x=>{
+      val statusCode = util.Try(x.toInt) getOrElse 0
+      if(statusCode>= 200 && statusCode < 300){
+        "Success"
+      } else if (statusCode>= 500 && statusCode < 600){
+        "Failure"
+      } else "Other"
+    })
+    //rdd with 5 min window
+    val statusCounts = successFailure.countByValueAndWindow(Seconds(300), Seconds(1))
+
+    statusCounts.foreachRDD((rdd,time)=>{
+      var totalSuccess: Long = 0
+      var totalFailure:Long = 0
+
+      if(rdd.count>0){
+        val elements = rdd.collect()
+        for(el <- elements){
+          val result = el._1
+          val count = el._2
+          if(result == "Success"){ totalSuccess += count}
+          if(result == "Failure"){ totalFailure += count}
+        }
+      }
+      println("Total success: " + totalSuccess + "Total failure: " + totalFailure )
+      //alarm only when its necessary
+      if(totalSuccess + totalFailure> 100){
+        val ratio: Double = util.Try( //prevent zero divison
+            totalFailure.toDouble / totalSuccess.toDouble
+        ) getOrElse 1
+        if(ratio > 0.5) { //wake someone if there are more errors than successes
+          println("Wake someone up! Smth ia wrong!")
+        } else {
+          println("All systems go.")
+        }
+      }
+    })
+
+    ssc.checkpoint("C:/checkpoint/")
+    ssc.start()
+    ssc.awaitTermination()
   }
 }
