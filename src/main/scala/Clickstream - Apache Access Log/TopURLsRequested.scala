@@ -24,10 +24,13 @@ object TopURLsRequested {
     val lines = ssc.socketTextStream("127.0.0.1", 9999, StorageLevel.MEMORY_AND_DISK_SER)
 
     // Extract the request field from each log line
-    val requests = lines.map(x => {val matcher:Matcher = pattern.matcher(x); if (matcher.matches()) matcher.group(5)})
+    val requests = lines.map(x => {val matcher:Matcher = pattern.matcher(x);
+      if (matcher.matches())
+        matcher.group(5)}
+    )
 
     // Extract the URL from the request
-    val urls = requests.map(x => {val arr = x.toString().split(" "); if (arr.size == 3) arr(1) else "[error]"})
+    val urls = requests.map(x => { val arr = x.toString().split(" "); if (arr.size == 3) arr(1) else "[error]"})
 
     // Reduce by URL over a 5-minute window sliding every second
     val urlCounts = urls.map(x => (x, 1)).reduceByKeyAndWindow(_ + _, _ - _, Seconds(300), Seconds(1))
