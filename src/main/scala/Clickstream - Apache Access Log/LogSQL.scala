@@ -43,9 +43,9 @@ object LogSQL {
       import ss.implicits._
       val requestedDF = rdd.map(r => Record(r._1,r._2,r._3)).toDF()
       //create a SQL table from DF
-      requestedDF.createOrReplaceGlobalTempView("requests")
+      requestedDF.createOrReplaceTempView("requests")
 
-      val wordCountsDF = ss.sqlContext.sql("select agent, count(*) as total from requestedDF group by agent")
+      val wordCountsDF = ss.sqlContext.sql("select agent, count(*) as total from requests group by agent")
       println(s"=================$time=================")
       wordCountsDF.show()
     })
