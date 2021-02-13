@@ -38,8 +38,18 @@ object LogSQL {
     )
     requests.foreachRDD((rdd,time)=> {
       val ss = SparkSession.builder()
-        .appName("LogSQL")
+        .appName("LogSQL").getOrCreate()
+
+      import ss.implicits._
+      val requestedDF = rdd.map(r => Record(r._1,r._2,r._3)).toDF()
+      //create a SQL table from DF
+      requestedDF.createOrReplaceGlobalTempView("requests")
+
+      val wordCountsDF = ss.sqlContext.sql("select agent, count(*) as total from requestedDF group by agent")
+      println(s"=================$time=================")
+      wordCountsDF.show()
     })
+
 
     // Kick it off
     ssc.checkpoint("C:/checkpoint/")
